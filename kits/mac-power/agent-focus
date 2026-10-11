@@ -1,0 +1,21 @@
+#!/bin/sh
+# agent-focus on|off: the "Agent On" / "Agent Off" shortcuts call this when the
+# Agent Focus turns on or off. It switches agent mode (pmset disablesleep) and
+# logs every run, because the Shortcuts error message ("Run Shell Script
+# finished with an error") says nothing. It always exits 0; read the log.
+# A marker file records the state for programs that cannot read the Focus store.
+STATE="${MAC_POWER_STATE:-$HOME/.local/state/mac-power}"
+LOG="$STATE/agent-focus.log"
+MARK="$STATE/agent-focus"
+case "$1" in on) v=1 ;; off) v=0 ;; *) echo "usage: agent-focus on|off" >&2; exit 2 ;; esac
+mkdir -p "$STATE"
+{
+  echo "--- $(date '+%F %T') $1 (pid $$, ppid $PPID, user $(id -un))"
+  /usr/bin/sudo -n /usr/bin/pmset -a disablesleep "$v"
+  rc=$?
+  echo "pmset exit $rc"
+  if [ "$v" = 1 ] && [ "$rc" = 0 ]; then touch "$MARK"; fi
+  if [ "$v" = 0 ]; then rm -f "$MARK"; fi
+  echo "SleepDisabled: $(/usr/bin/pmset -g | awk '/SleepDisabled/ {print $2}')"
+} >>"$LOG" 2>&1
+exit 0

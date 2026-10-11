@@ -2,6 +2,11 @@
 
 Every entry: what changed, and **what to review in a vault that has already adopted PAROS.**
 
+## 0.16.0 (2026-10-11)
+
+- **New playbook `keep-your-mac-awake` and kit `kits/mac-power/`:** two power modes for a Mac. Prezi keeps the display on while presenting, on battery too (a deck in full screen can switch it on by itself with a Screen Wake Lock). Agent keeps the Mac working with the lid closed so long agent runs finish, on battery too, with the display off. Terminal commands (`prezi`, `agent-on`, `agent-off`, `power`), an "Agent" Focus in Control Center through two shortcuts and a logging helper, a lid watcher, a sudoers rule for exactly two commands, a timer and a battery guard. The intent comes first, so it carries to Linux and Windows too; eight pitfalls with fixes.
+- To review: nothing to adopt. If you run long agent sessions on a Mac laptop, ask `/paros keep my Mac awake`.
+
 ## 0.15.1 (2026-10-10)
 
 - **New `explainer/`:** an interactive page that explains what PAROS is and walks through the thirteen principles (P00 to P12), each with a short animation, the reason behind it, the practice and an everyday analogy. English and Hungarian (follows the browser language; `?lang=hu` or `?lang=en` forces one). A tour mode plays them in order; the arrow keys step through. Open `explainer/index.html` in any browser, no install.
