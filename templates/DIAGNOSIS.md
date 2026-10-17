@@ -3,7 +3,9 @@ title: DIAGNOSIS
 date: YYYY-MM-DD
 status: active
 description: PAROS diagnosis of this vault: maturity per principle with evidence, the biggest gaps, and the first step that removes the most friction.
-reference_version: 0.7.0
+reference_version: 0.18.0
+open_gaps: []        # principle IDs at level 0-1 marked "now", e.g. [P06, P10]; the advisor reads this
+next_check: YYYY-MM-DD   # two weeks after the diagnosis; /paros offers a new one after this date
 ---
 
 # PAROS diagnosis

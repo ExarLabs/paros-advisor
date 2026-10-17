@@ -2,6 +2,17 @@
 
 Every entry: what changed, and **what to review in a vault that has already adopted PAROS.**
 
+## 0.18.0 (2026-10-28)
+
+People who use PAROS often credit it with what their agent app does (or the other way round), and many work for weeks without the parts that make a vault a PAROS. This release makes the advisor teach that difference and lead to the missing pieces, as much as the person is curious about.
+
+- **The advisor guides, and follows your curiosity** (`AGENTS.md`, "Guide, do not only answer"): it names what the agent app does and what PAROS adds, keeps your open gaps in mind, and brings one up only when your current task runs into it. Curious people get the reasons and the architecture; busy people get one line and the next step.
+- **The tour starts with the split** (`flows/1-tour.md`): a short table of what the agent app gives and what PAROS gives, and a read-only demonstration on your own vault: one recent question found the plain way and through the index.
+- **Finding comes first.** The search index (`kits/search`) and the Librarian are now the first thing to build, from about two hundred notes (before: "past a few thousand"). Updated in P06, `agents/README.md`, the adoption order (P06 right after P00 and P01), the diagnosis (P06 below level 2 is always among the three biggest gaps in such a vault), the `organise-your-knowledge` playbook and the search kit.
+- **Your gaps are remembered.** `PAROS/DIAGNOSIS.md` gets two frontmatter fields, `open_gaps` and `next_check`. The shared advisor entry (`install/ENTRY.md`, so both the `/paros` command and the plugin) reads them and says at most one line: offers a diagnosis if there is none, a new one after `next_check`, or the index and the Librarian if finding is the gap. The menu has a new item, "find things faster".
+- **A PAROS status block for your vault's entry file** (`templates/vault-AGENTS.md`): the last diagnosis and the open gaps, so ordinary sessions keep them in mind too, mention a gap at most once a week when it gets in the way, and say in a few words when an answer depended on a PAROS part (the index, a description, a learned rule).
+- To review: run `/paros`; if you have no `PAROS/DIAGNOSIS.md` yet, accept the diagnosis. If you have one, let the advisor add `open_gaps` and `next_check` and the PAROS status block to your entry file (each with your yes). If your vault has more than a couple of hundred notes and no search index, ask `/paros find things faster`.
+
 ## 0.17.0 (2026-10-22)
 
 - **The PAROS Advisor as a plugin, for Claude Cowork too.** This repository is now also a plugin marketplace (`.claude-plugin/`). In Cowork: Customize, Plugins, Add marketplace, `ExarLabs/paros-advisor`, then add **PAROS Advisor**. In Claude Code: `/plugin marketplace add ExarLabs/paros-advisor` and `/plugin install paros@paros-advisor`. It brings the `paros` skill (`/paros:paros`, or ask for the PAROS Advisor) and the six PAROS agents (`paros:alfred`, `paros:librarian` and the rest), so people whose company blocks the Claude Code command line can still use the advisor.

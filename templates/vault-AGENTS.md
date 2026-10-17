@@ -36,6 +36,14 @@ Archive instead of delete (`Archive/`, with date and reason).
 
 <Where my task list lives; read it at the start of every session.>
 
+## PAROS status (kept up to date by the advisor)
+
+Last diagnosis: <YYYY-MM-DD> (`PAROS/DIAGNOSIS.md`). Open gaps: <e.g. P06 search index, P10 backup>.
+
+- When a task runs into an open gap (for example a search that had to open many files while P06 is open), mention it once, in one sentence, with the fix. At most once a week per gap, never in the middle of urgent work.
+- When an answer clearly depended on a PAROS part (the index, a note's description, a learned rule), say so in a few words, so it is clear what PAROS adds to the agent app.
+- How much to explain follows my curiosity: more when I ask why, less when I am busy.
+
 ## PAROS reference
 
 The reference lives at `<~/paros-advisor>`. Adoption log: `PAROS/ADOPTION.md`.

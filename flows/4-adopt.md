@@ -13,9 +13,9 @@ From `PAROS/DIAGNOSIS.md`, write `PAROS/ADOPTION.md` (template: `templates/ADOPT
 
 Add a **Skills and kits** section to the checklist: the ones the person chose from the diagnosis and the guide, each with status and the adoption steps from [`skills/README.md`](../skills/README.md).
 
-Order: the **core** principles first (P00, P01, P03, P04, P06, P09, P11), then the rest. Show the list and ask for approval of the order.
+Order: the **core** principles first (P00, P01, P06, P03, P04, P09, P11), then the rest. Show the list and ask for approval of the order.
 
-A good first week: the vault entry file with the boundaries, frontmatter for new files, the task list, search. The learning cycle and connectors can wait.
+A good first week: the vault entry file with the boundaries and the PAROS status block, **the search index and the Librarian** (finding is what everything else builds on), frontmatter for new files, the task list. The learning cycle and connectors can wait.
 
 ## 2. Doing it
 
@@ -26,6 +26,6 @@ A good first week: the vault entry file with the boundaries, frontmatter for new
 
 ## 3. Checking
 
-Each principle has a **Check** section. Run it after the item is done and record the result. Run the diagnosis again after a batch of items; the change in levels is the progress.
+Each principle has a **Check** section. Run it after the item is done and record the result. Run the diagnosis again after a batch of items; the change in levels is the progress. After each run, update `open_gaps` and `next_check` in `PAROS/DIAGNOSIS.md` and the PAROS status block in the entry file (with a yes).
 
 Adoption is done when the core principles are at level 2 or higher, and in a fresh session the agent finds what it needs on its own.

@@ -2,7 +2,7 @@
 
 A working reference for [P06](../../principles/P06-search.md): a SQLite FTS5 index of the vault's markdown, a ranked search on 2 to 4 word stems, and a read-only skill that uses it.
 
-Optional. Read it, then rebuild or adapt it for the vault. Below a few thousand notes, Obsidian's own search and grep are fine.
+Read it, then rebuild or adapt it for the vault. Up to about two hundred notes, Obsidian's own search and grep are fine; above that, this index and the Librarian (`agents/librarian`) are usually the first thing worth building, because everything else in PAROS depends on finding.
 
 ## Why an index
 

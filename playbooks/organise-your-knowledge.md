@@ -132,7 +132,7 @@ Two rules worth fixing now, because they save the most trouble later:
 
 **Agent:** sets up search to match the vault's size.
 
-- **Small vault (under a few thousand notes):** Obsidian's search and grep are fine. Write that into the entry file.
+- **Small vault (up to about two hundred notes):** Obsidian's search and grep are fine. Write that into the entry file.
 - **Larger:** the search kit builds a full-text index over headers and bodies, outside the vault, with `title` and `description` weighted above the body. Questions become 2 to 4 word stems.
 
 ```bash
