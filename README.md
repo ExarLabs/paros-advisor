@@ -51,6 +51,8 @@ Tell your AI agent (Claude Code or Codex), in any language:
 
 It downloads this repository into `~/.paros-advisor` (with git, or as a zip without it; no GitHub account needed) and installs the **`/paros`** command. From then on, in any session in your notes folder, type `/paros` for the menu, or `/paros <your question>`: what is my vault behind on, how do I connect a tool, how do I build a dashboard, how do I organise my knowledge. The advisor updates itself each time you use it and tells you what is new. Details: [`install/INSTALL.md`](install/INSTALL.md).
 
+**In Claude Cowork** (or as a plugin in Claude Code): add this repository as a plugin marketplace, then add the **PAROS Advisor** plugin. In Cowork: Customize, Plugins, Add, Add marketplace, Add from a repository, enter `ExarLabs/paros-advisor`. In Claude Code: `/plugin marketplace add ExarLabs/paros-advisor`, then `/plugin install paros@paros-advisor`. You get the `paros` skill (type `/paros:paros`, or just ask for the PAROS Advisor) and the six PAROS agents. It is the same advisor from the same files: the `/paros` command and the plugin both start from [`install/ENTRY.md`](install/ENTRY.md), so every update reaches both.
+
 ## Quick start (by hand)
 
 1. Download the repository somewhere **outside** your vault:
@@ -81,7 +83,7 @@ It downloads this repository into `~/.paros-advisor` (with git, or as a zip with
 | [`templates/`](templates/) | Starting points for your vault: entry file, frontmatter, skill definition, adoption checklist. |
 | [`wisdom/`](wisdom/README.md) | Practical wisdom on working with AI: 28 tips around four human dimensions (Ethos, Logos, Pathos, Thelos), with a question map, plus field lessons measured in daily use. |
 | [`playbooks/`](playbooks/README.md) | Step-by-step guides for what people do with PAROS: connectors, dashboards, organising knowledge, meetings, thinking with several AIs. |
-| [`install/`](install/INSTALL.md) | The installer and the `/paros` command. |
+| [`install/`](install/INSTALL.md) | The installer, the `/paros` command, the plugin's `paros` skill, and `ENTRY.md`, the entry both share. |
 | [`starter/`](starter/README.md) | A small demo vault with fictional areas, three agents and a dashboard: open it to **see** PAROS working before you build your own. |
 | [`skills/`](skills/README.md) | Ready skills you can adopt into your vault (recipe in `CURRENT.md`, your settings in `LOCAL.md`). |
 | [`agents/`](agents/README.md) | Six agents (viewpoints) you can adopt: Alfred, Iris, Moneto, Presto, Librarian, Maestro. |
@@ -99,7 +101,7 @@ The repository is written in English. Your agent talks to you in your language a
 
 ## Platforms
 
-Works with **Claude Code** and **OpenAI Codex**, and with any agent that follows the `AGENTS.md` convention. Platform-specific parts (hooks, scheduling) are marked as such.
+Works with **Claude Code**, **OpenAI Codex** and **Claude Cowork** (through the plugin), and with any agent that follows the `AGENTS.md` convention. Platform-specific parts (hooks, scheduling) are marked as such.
 
 ## License
 

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "paros",
+  "displayName": "PAROS Advisor",
+  "description": "An advisor that helps you build your own PAROS: a personal operating system for your notes that learns from you. Tour, diagnosis, personal guide, adoption and advice, in your language. Same advisor as the /paros command, for Claude Cowork and Claude Code.",
+  "author": {
+    "name": "ExarLabs",
+    "url": "https://ignis.academy/paros"
+  },
+  "homepage": "https://ignis.academy/paros",
+  "repository": "https://github.com/ExarLabs/paros-advisor",
+  "license": "MIT",
+  "keywords": [
+    "notes",
+    "obsidian",
+    "vault",
+    "personal-knowledge",
+    "second-brain",
+    "agents"
+  ],
+  "skills": [
+    "./install/plugin-skills/"
+  ],
+  "agents": [
+    "./agents/alfred/agent.claude.md",
+    "./agents/iris/agent.claude.md",
+    "./agents/librarian/agent.claude.md",
+    "./agents/maestro/agent.claude.md",
+    "./agents/moneto/agent.claude.md",
+    "./agents/presto/agent.claude.md"
+  ]
+}

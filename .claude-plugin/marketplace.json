@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "paros-advisor",
+  "description": "The PAROS Advisor as a plugin, from the same repository as the /paros command.",
+  "owner": { "name": "ExarLabs", "url": "https://ignis.academy/paros" },
+  "plugins": [
+    {
+      "name": "paros",
+      "source": "./",
+      "description": "The PAROS Advisor: tour, diagnosis, personal guide, adoption and advice for your notes folder, plus the six PAROS agents.",
+      "category": "productivity",
+      "tags": ["notes", "obsidian", "personal-knowledge"],
+      "skills": ["./install/plugin-skills/"]
+    }
+  ]
+}

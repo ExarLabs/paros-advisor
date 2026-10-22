@@ -2,6 +2,14 @@
 
 Every entry: what changed, and **what to review in a vault that has already adopted PAROS.**
 
+## 0.17.0 (2026-10-22)
+
+- **The PAROS Advisor as a plugin, for Claude Cowork too.** This repository is now also a plugin marketplace (`.claude-plugin/`). In Cowork: Customize, Plugins, Add marketplace, `ExarLabs/paros-advisor`, then add **PAROS Advisor**. In Claude Code: `/plugin marketplace add ExarLabs/paros-advisor` and `/plugin install paros@paros-advisor`. It brings the `paros` skill (`/paros:paros`, or ask for the PAROS Advisor) and the six PAROS agents (`paros:alfred`, `paros:librarian` and the rest), so people whose company blocks the Claude Code command line can still use the advisor.
+- **One entry for every platform:** the `/paros` command and the plugin's skill are now thin wrappers around the new [`install/ENTRY.md`](install/ENTRY.md). Each does only its platform step (the command updates the local copy; the plugin is updated by the app) and then follows the same file, so a change reaches both at once. The plugin has no fixed version: every change here is a new plugin version.
+- **Agents find the reference copy inside the plugin** (`${CLAUDE_PLUGIN_ROOT}`), and fall back to `~/.paros-advisor` as before.
+- The plugin sends no usage ping (`PRIVACY.md`).
+- To review: nothing to change. If you use `/paros`, the next run refreshes the command by itself. Use either the command or the plugin on one machine, not both, so you see one advisor.
+
 ## 0.16.0 (2026-10-11)
 
 - **New playbook `keep-your-mac-awake` and kit `kits/mac-power/`:** two power modes for a Mac. Prezi keeps the display on while presenting, on battery too (a deck in full screen can switch it on by itself with a Screen Wake Lock). Agent keeps the Mac working with the lid closed so long agent runs finish, on battery too, with the display off. Terminal commands (`prezi`, `agent-on`, `agent-off`, `power`), an "Agent" Focus in Control Center through two shortcuts and a logging helper, a lid watcher, a sudoers rule for exactly two commands, a timer and a battery guard. The intent comes first, so it carries to Linux and Windows too; eight pitfalls with fixes.

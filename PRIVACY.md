@@ -39,3 +39,7 @@ Either of these stops the ping completely; everything else keeps working:
 - create an empty file named `.no-ping` in the advisor folder (by default `~/.paros-advisor/.no-ping`). Updates keep this file.
 
 The code is in `install/install.py` (the `ping` function); you can read exactly what is sent.
+
+## The plugin sends nothing
+
+The PAROS plugin (Claude Cowork, or Claude Code through `/plugin`) does not run the installer, so it sends no usage ping at all. Only the `/paros` command, through `install.py`, sends the ping described above.
