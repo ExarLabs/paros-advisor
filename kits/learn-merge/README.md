@@ -61,6 +61,7 @@ python learn_merge.py deprecate CURRENT.md --id R-001 --packet obs-2026-10-05-03
 python learn_merge.py move CURRENT.md --id R-003 --reason "detail, keep the main file short"
 # - (R-003 in detail: `references/rules.md`) <!-- moved:R-003 -->
 ```
+If the rule opens with a bold title (`- **Short title:** the detail...`), the pointer keeps the title verbatim, so a reader sees what the moved rule is about without opening `references/`: `- (R-003 in detail: references/rules.md: Short title)`.
 
 **list**: print the active rules with their IDs.
 ```bash
@@ -77,11 +78,15 @@ What every write command leaves behind, next to the target file (or in `agents/<
 
 - `versions/v<old>.md`: the file exactly as it was before the change. If that snapshot already exists but the file was edited by hand since, a separate `v<old>+pre-<timestamp>.md` is written; an existing snapshot is never overwritten.
 - `LEARNINGS.md`: one row in the `## Integration log (learn_merge.py)` table: date, operation, rule, old text, new text, packet, reason, new version. This is also where you look to undo a change.
-- The target file itself is otherwise byte-for-byte unchanged.
+- The target file itself is otherwise byte-for-byte unchanged, line endings included: a file with CRLF (or mixed) line endings keeps them, and new lines get the file's dominant ending. The snapshot keeps the original bytes.
 
 ## The Constitution
 
 `## Constitution` holds the rules only the owner changes: typically the safety boundaries (sending, publishing, deleting, money, credentials, writing to external systems). `learn_merge.py` refuses to add into it, refuses to update, deprecate or move a rule inside it, and after every change compares the section's hash with the one taken before; if anything differs, it aborts without writing.
+
+## The generated block
+
+If you also use [`kits/cognition`](../cognition/README.md), it keeps a generated list of weighted rules at the end of a target file, between the `COGNITION:BEGIN` and `COGNITION:END` HTML comment markers, and rewrites that block as a whole on every render. A rule written into it would be lost at the next render, so `learn_merge.py` treats the block like the Constitution: a section ends at the block's marker (an `add` into the last section lands above the block), `deprecate` creates the "Retired rules" section above a block that ends the file, and any operation that would write into the block or take a line out of it aborts without writing.
 
 ## The judge
 
@@ -116,8 +121,11 @@ Configuration (environment):
 | `PAROS_JUDGE_URL` | Groq's OpenAI-compatible endpoint | Any OpenAI-compatible chat completions URL. |
 | `PPLX_API_KEY` | | Optional fallback provider (Perplexity). |
 | `PAROS_JUDGE_FALLBACK_MODEL` | `sonar-pro` | Fallback model. |
+| `PAROS_JUDGE_BUDGET` | `20000` | Upper bound of the whole prompt, in characters. |
 
 The key is never printed. The request sets its own `User-Agent`, because the default Python one is blocked by the provider's edge network. Transient errors (429, 5xx) are retried twice before falling back; retry notices go to stderr so stdout stays clean JSON.
+
+**Size budget.** A free or small API key often has a per-minute token allowance, and a provider rejects a single request larger than that allowance with HTTP 413; waiting does not help. So the prompt is kept within `PAROS_JUDGE_BUDGET`: the proposed change always goes in whole, the packet next, and the target's rule lines fill the rest as whole lines. When the budget is tight, the rule the change touches (its `id`) and the lines of the target section (`--section`, else the delta's `section`) come first. The prompt says how many lines were left out, and one line goes to stderr. On a 413 there is one retry with a smaller prompt, scaled by the limit the provider reports.
 
 Pick the judge so that it is a different family from your reviewer. If your reviewer runs on one vendor's models, the default open-weights model on another provider is a cheap, fast choice; any OpenAI-compatible endpoint works.
 
@@ -138,7 +146,7 @@ The reviewer never edits the definition with a text editor or a rewrite prompt; 
 
 ## Platform notes
 
-- **Platform-independent:** both scripts are plain Python 3.8+ with no dependencies, and behave the same on macOS, Linux and Windows. Files are written as UTF-8 with `\n` line endings.
+- **Platform-independent:** both scripts are plain Python 3.8+ with no dependencies, and behave the same on macOS, Linux and Windows. Files are written as UTF-8; new files get `\n` line endings, existing files keep theirs.
 - **Claude Code:** run the reviewer as a background subagent; a subagent that cannot start another one ends its report with a pointer to the packet, and the main session starts the review.
 - **Codex and others:** run the review at the start of a session, or from any scheduler, by calling the two scripts.
 - Keep the judge's API key outside the vault (environment or the secrets folder), never in a note.

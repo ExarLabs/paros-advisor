@@ -5,7 +5,7 @@ A kit is a working example of a principle. **Optional,** and never copied blindl
 | Kit | Principle | What it gives | Status |
 |---|---|---|---|
 | [`search`](search/README.md) | P06 | SQLite FTS5 index of the vault (kept outside it), ranked search on 2 to 4 word stems, a read-only skill | **available** |
-| [`cognition`](cognition/README.md) | P05 | weighted learned rules, use marks, the cognitive cycle, a report with a heat map; hooks for Claude Code | **available** |
+| [`cognition`](cognition/README.md) | P05 | weighted learned rules, use marks, the cognitive cycle, a report with a heat map; the effect of learning measured from the transcripts (friction), detection of recurring errors, a curator that moves each rule to its cause, a general rules file; hooks for Claude Code | **available** |
 | [`learn-merge`](learn-merge/README.md) | P05 | typed rule changes without compaction (add, update, deprecate, move), version snapshots, a log; an independent judge from another model family | **available** |
 | [`health`](health/README.md) | P11 | canary and weighted checks (index, secrets, frontmatter, learning cycle, backup age), alerts on state change into your task list | **available** |
 | [`thin-entry`](thin-entry/README.md) | P04 | builds thin `SKILL.md` entries that always run the live definition from your vault, with a version report; version bumps with snapshots; a learning digest across skills | **available** |

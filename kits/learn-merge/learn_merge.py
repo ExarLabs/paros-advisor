@@ -19,11 +19,31 @@ Rule format in the target file (one line per rule):
 Safeguards:
   * no operation may write into or out of the "## Constitution" section
     (checked by comparing the section hash before and after the change);
+  * no operation may write into or out of the generated COGNITION block that
+    kits/cognition renders at the end of a target file (the block is rewritten as a
+    whole on every render, so a rule placed there would be lost);
   * before every change, a snapshot of the previous version goes to versions/,
     and the patch version in the frontmatter is bumped;
   * every change appends one row to the "Integration log" table in LEARNINGS.md
     (old text and new text);
   * apart from the change itself, the file stays byte-for-byte unchanged.
+
+Line endings: the target, LEARNINGS.md and references/rules.md are read and written
+without newline translation. The operations run on text normalised to LF; on writing,
+unchanged lines get their own original line ending back (CRLF, LF or mixed) and new
+lines get the file's dominant ending. The snapshot keeps the original bytes. On an LF
+file the output is byte-for-byte what it was before this handling existed.
+
+The generated block: a section also ends at a COGNITION marker that stands at the start
+of its own line (the same rule kits/cognition uses), so `add` into the last section before
+the block inserts above the block. `deprecate` writes at the end of the "Retired rules"
+section; if there is none yet, it creates it at the end of the file, or above the
+generated block when the file ends with one.
+
+move: a newly created references/rules.md gets a full frontmatter (with a uuid4 id). The
+pointer line keeps the rule's opening bold title verbatim (without a trailing colon), so a
+reader sees what the rule is about without opening references/; a rule without a bold
+title gets the plain pointer.
 
 Home folder: versions/, LEARNINGS.md and references/ live next to the target file.
 If the target is an agent definition (agents/<name>.md), they go into the agent's own
@@ -46,12 +66,14 @@ Standard library only, Python 3.8+.
 """
 import argparse
 import datetime
+import difflib
 import hashlib
 import io
 import json
 import os
 import re
 import sys
+import uuid
 
 TODAY = datetime.date.today().isoformat()
 CONSTITUTION = "Constitution"
@@ -61,6 +83,13 @@ REF_NAME = "rules.md"
 RULE_RE = re.compile(r"<!--\s*rule:(R-\d+)(?:\s+since:[0-9-]+)?\s*-->")
 # Every ID ever issued (active, retired or moved), so that next_id() never reuses one.
 ID_RE = re.compile(r"<!--\s*(?:rule|deprecated|moved):(R-\d+)")
+# Markers of the generated block written by kits/cognition. A line is a marker only when it
+# stands at the start of its own line (the same rule as cognition.py BEGIN_LINE and END_LINE).
+COG_BEGIN = "<!-- COGNITION:BEGIN"
+COG_END = "<!-- COGNITION:END -->"
+COG_BEGIN_LINE = re.compile(r"^" + re.escape(COG_BEGIN) + r"\b[^\r\n]*\r?$")
+COG_END_LINE = re.compile(r"^" + re.escape(COG_END) + r"[ \t]*\r?$")
+TITLE_RE = re.compile(r"\*\*(.+?)\*\*")
 
 
 def read(p):
@@ -68,17 +97,105 @@ def read(p):
         return f.read()
 
 
-def write(p, s):
-    with io.open(p, "w", encoding="utf-8", newline="\n") as f:
+def read_raw(p):
+    """Read without newline translation (CRLF stays), so the write can keep the original bytes."""
+    with io.open(p, encoding="utf-8", newline="") as f:
+        return f.read()
+
+
+def write_raw(p, s):
+    with io.open(p, "w", encoding="utf-8", newline="") as f:
         f.write(s)
 
 
+def norm(raw):
+    """The operations run on text normalised to LF."""
+    return raw.replace("\r\n", "\n")
+
+
+def eol_of(raw):
+    """The file's dominant line ending: CRLF if at least half of the line breaks are CRLF."""
+    crlf = raw.count("\r\n")
+    return "\r\n" if crlf and crlf * 2 >= raw.count("\n") else "\n"
+
+
+def restore_eol(raw, new):
+    """Put the original line endings back onto the normalised result.
+
+    Unchanged lines and lines replaced one to one get their own original ending; new lines get
+    the file's dominant ending. The common prefix and suffix pair up directly (unambiguous for a
+    single insertion or replacement, even with repeated lines); only the middle goes through
+    difflib. If the original has no CR at all, the result is the normalised text itself."""
+    if "\r" not in raw:
+        return new
+    parts = raw.split("\n")
+    old = [p[:-1] if k < len(parts) - 1 and p.endswith("\r") else p for k, p in enumerate(parts)]
+    ends = ["\r\n" if p.endswith("\r") else "\n" for p in parts[:-1]]  # the last piece has no ending
+    lines = new.split("\n")
+    seps = [eol_of(raw)] * (len(lines) - 1)
+    n = min(len(old), len(lines))
+    pre = 0
+    while pre < n and old[pre] == lines[pre]:
+        pre += 1
+    suf = 0
+    while suf < n - pre and old[-1 - suf] == lines[-1 - suf]:
+        suf += 1
+    pairs = [(k, k) for k in range(pre)] + [(len(old) - 1 - k, len(lines) - 1 - k) for k in range(suf)]
+    mid = difflib.SequenceMatcher(None, old[pre:len(old) - suf], lines[pre:len(lines) - suf], autojunk=False)
+    for tag, i1, i2, j1, j2 in mid.get_opcodes():
+        if tag == "equal" or (tag == "replace" and i2 - i1 == j2 - j1):
+            pairs += [(pre + i1 + k, pre + j1 + k) for k in range(j2 - j1)]
+    for i, j in pairs:
+        if j < len(seps) and i < len(ends):
+            seps[j] = ends[i]
+    return "".join(ln + sep for ln, sep in zip(lines, seps)) + lines[-1]
+
+
+def cog_marker(ln):
+    return bool(COG_BEGIN_LINE.match(ln) or COG_END_LINE.match(ln))
+
+
+def cog_blocks(lines):
+    """The generated blocks as [(BEGIN line, END line)], from a BEGIN to the next END. An unclosed
+    BEGIN counts to the end of the file: nothing is written there either."""
+    out, i = [], 0
+    while i < len(lines):
+        if COG_BEGIN_LINE.match(lines[i]):
+            j = i + 1
+            while j < len(lines) and not COG_END_LINE.match(lines[j]):
+                j += 1
+            out.append((i, min(j, len(lines) - 1)))
+            i = j + 1
+        else:
+            i += 1
+    return out
+
+
+def cog_content(lines):
+    return [lines[b:e + 1] for b, e in cog_blocks(lines)]
+
+
+def in_cog_block(lines, idx):
+    return any(b <= idx <= e for b, e in cog_blocks(lines))
+
+
+def tail_block_start(lines):
+    """If the file ends with a generated block (followed by blank lines at most), its BEGIN line;
+    otherwise the end of the file."""
+    blocks = cog_blocks(lines)
+    if blocks and not any(x.strip() for x in lines[blocks[-1][1] + 1:]):
+        return blocks[-1][0]
+    return len(lines)
+
+
 def section_range(lines, title):
-    """(start, end) line indexes of the first ## section whose title starts with `title`."""
+    """(start, end) line indexes of the first ## section whose title starts with `title`.
+    A section also ends at a generated-block marker."""
     heads = [(i, ln[3:].strip()) for i, ln in enumerate(lines) if ln.startswith("## ")]
     for k, (i, t) in enumerate(heads):
         if t.lower().startswith(title.lower()):
             end = heads[k + 1][0] if k + 1 < len(heads) else len(lines)
+            end = next((j for j in range(i + 1, end) if cog_marker(lines[j])), end)
             return i, end
     return None
 
@@ -149,28 +266,30 @@ def bump(text):
     return text[:m.start()] + "version: " + new + text[m.end():], old, new
 
 
-def snapshot(home, text, ver):
+def snapshot(home, raw, ver):
+    """raw: the target's original text, without newline translation; the snapshot keeps its bytes."""
     d = os.path.join(home, "versions")
     os.makedirs(d, exist_ok=True)
     p = os.path.join(d, "v%s.md" % ver)
     if not os.path.exists(p):
-        write(p, text)
-    elif read(p) != text:
+        write_raw(p, raw)
+    elif read_raw(p) != raw:
         # v<ver>.md already exists, but the file changed since without a version bump
         # (a manual edit): keep the pre-change state in a separate snapshot and never
         # overwrite an existing one.
         base = os.path.join(d, "v%s+pre-%s" % (ver, datetime.datetime.now().strftime("%Y%m%d%H%M")))
         q, n = base + ".md", 2
-        while os.path.exists(q) and read(q) != text:
+        while os.path.exists(q) and read_raw(q) != raw:
             q, n = "%s-%d.md" % (base, n), n + 1
         if not os.path.exists(q):
-            write(q, text)
+            write_raw(q, raw)
 
 
 def ledger(home, op, rid, old, new, packet, reason, ver):
     os.makedirs(home, exist_ok=True)
     p = os.path.join(home, "LEARNINGS.md")
-    s = read(p) if os.path.exists(p) else "# Learnings\n"
+    raw = read_raw(p) if os.path.exists(p) else "# Learnings\n"
+    s = norm(raw)  # restore_eol() gives LEARNINGS.md its own line endings back
     if LOG_HEAD not in s:
         s = (s.rstrip("\n") + "\n\n" + LOG_HEAD + "\n\n"
              "| Date | Operation | Rule | Old text | New text | Packet | Reason | Version |\n"
@@ -199,7 +318,7 @@ def ledger(home, op, rid, old, new, packet, reason, ver):
         s = "\n".join(lines)
     else:
         s = s.rstrip("\n") + "\n" + row + "\n"
-    write(p, s)
+    write_raw(p, restore_eol(raw, s))
 
 
 def rule_line(text, rid, since=None):
@@ -210,6 +329,16 @@ def rule_text(line):
     return RULE_RE.sub("", line).strip().lstrip("-").strip()
 
 
+def moved_pointer(text, rid):
+    """The pointer line left by move. If the rule opens with a bold title, the title goes into the
+    pointer verbatim (without a trailing colon); otherwise the plain pointer."""
+    m = TITLE_RE.match(text)
+    title = m.group(1).strip().rstrip(":").strip() if m else ""
+    if title and "<!--" not in title and "-->" not in title:
+        return "- (%s in detail: `references/%s`: %s) <!-- moved:%s -->" % (rid, REF_NAME, title, rid)
+    return "- (%s in detail: `references/%s`) <!-- moved:%s -->" % (rid, REF_NAME, rid)
+
+
 def fail(msg):
     sys.exit("learn_merge: " + msg)
 
@@ -217,9 +346,11 @@ def fail(msg):
 def apply(args):
     cur = args.file
     home = home_dir(cur, getattr(args, "home", None))
-    text = read(cur)
+    raw = read_raw(cur)
+    text = norm(raw)
     before_const = constitution_hash(text)
     lines = text.split("\n")
+    before_cog = cog_content(lines)  # the generated block is untouchable
     old_txt, new_txt, rid = "", "", getattr(args, "id", None)
 
     if args.op == "add":
@@ -241,6 +372,8 @@ def apply(args):
             fail("no such rule ID: %s" % rid)
         if in_constitution(lines, i):
             fail("learning may not touch a %s rule." % CONSTITUTION)
+        if in_cog_block(lines, i):
+            fail("learning may not touch a line of the generated COGNITION block.")
         old_txt = rule_text(lines[i])
         if args.op == "update":
             new_txt = args.text
@@ -248,36 +381,49 @@ def apply(args):
             lines[i] = rule_line(args.text, rid, m.group(1) if m else None)
         elif args.op == "deprecate":
             gone = lines.pop(i)
-            if RETIRED_HEAD not in "\n".join(lines):
-                while lines and lines[-1].strip() == "":
-                    lines.pop()
-                lines += ["", RETIRED_HEAD, "",
-                          "<!-- Retired but preserved rules. They no longer apply; they stay for their history. -->",
-                          ""]
-            lines.append("- ~~%s~~ (retired %s: %s) <!-- deprecated:%s -->"
-                         % (rule_text(gone), TODAY, args.reason, rid))
+            dep = "- ~~%s~~ (retired %s: %s) <!-- deprecated:%s -->" % (rule_text(gone), TODAY, args.reason, rid)
+            r = section_range(lines, RETIRED_HEAD[3:])
+            if r:
+                # at the end of the "Retired rules" section, with the add insertion rule
+                pos = r[1]
+                while pos > r[0] + 1 and lines[pos - 1].strip() in ("", "---"):
+                    pos -= 1
+                lines.insert(pos, dep)
+            else:
+                # at the end of the file, or above a generated block that ends the file
+                pos = tail_block_start(lines)
+                while pos > 0 and lines[pos - 1].strip() == "":
+                    pos -= 1
+                lines[pos:pos] = ["", RETIRED_HEAD, "",
+                                  "<!-- Retired but preserved rules. They no longer apply; they stay for their history. -->",
+                                  "", dep]
+                pos += 5
+            if pos == len(lines) - 1:
+                lines.append("")  # the retired line always ends with a line break
             new_txt = "retired"
         elif args.op == "move":
             gone = lines[i]
             ref = os.path.join(home, "references", REF_NAME)
             os.makedirs(os.path.dirname(ref), exist_ok=True)
-            rs = read(ref) if os.path.exists(ref) else (
+            rs = read_raw(ref) if os.path.exists(ref) else (
                 "---\ntitle: rules\ndate: %s\nstatus: active\n"
                 "description: \"Detailed rules moved verbatim out of the main definition by "
                 "learn_merge.py move. They still apply; the main file points to them.\"\n"
-                "---\n\n# Detailed rules\n\n" % TODAY)
-            write(ref, rs.rstrip("\n") + "\n" + gone + "\n")
-            lines[i] = "- (%s in detail: `references/%s`) <!-- moved:%s -->" % (rid, REF_NAME, rid)
+                "id: %s\n---\n\n# Detailed rules\n\n" % (TODAY, uuid.uuid4()))
+            write_raw(ref, restore_eol(rs, norm(rs).rstrip("\n") + "\n" + gone + "\n"))
+            lines[i] = moved_pointer(old_txt, rid)
             new_txt = "moved to references/%s" % REF_NAME
 
     out = "\n".join(lines)
     if text.endswith("\n") and not out.endswith("\n"):
-        out += "\n"  # keep the final newline (deprecate appends after trimming blank lines)
+        out += "\n"  # keep the final newline
     if constitution_hash(out) != before_const:
         fail("the %s section would have changed: aborted." % CONSTITUTION)
     out, old_ver, new_ver = bump(out)
-    snapshot(home, text, old_ver or "before-%s" % TODAY)
-    write(cur, out)
+    if cog_content(out.split("\n")) != before_cog:
+        fail("learning may not write into the generated COGNITION block: aborted.")
+    snapshot(home, raw, old_ver or "before-%s" % TODAY)
+    write_raw(cur, restore_eol(raw, out))
     ledger(home, args.op, rid, old_txt, new_txt, getattr(args, "packet", ""), args.reason, new_ver)
     print(json.dumps(dict(ok=True, op=args.op, rule=rid, version=new_ver), ensure_ascii=False))
 

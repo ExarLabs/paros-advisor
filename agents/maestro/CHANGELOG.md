@@ -2,6 +2,12 @@
 
 Every entry: what changed, and **what to review in a vault that has already adopted this agent.**
 
+## 1.1.0 (2026-10-28)
+
+- `cycle` grows from seven to eleven steps, following `kits/cognition` 0.2.0: measure the effect of learning from the transcripts (friction, the rules with a signal pattern, rules without effect), detect recurring errors without a rule and write packets for them, curate every cycle (the rule moves to its cause; lossless operations; new text only with the judge's yes; never set `enforce`), and reflect on how the system learns.
+- `learn-review` step 4: the home of a rule is where its cause lives, not where the lesson was noticed.
+- To review: adopt `kits/cognition` 0.2.0 first (new `miner.py`, new packet fields); then update the cycle steps in your Maestro the same way.
+
 ## 1.0.0 (2026-10-05)
 
 - First public version, generalised from a system caretaker in daily use since mid 2026. The original's project navigation domain (brand to website) is left out: it is a capability, not part of the caretaker viewpoint.

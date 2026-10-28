@@ -2,6 +2,21 @@
 
 Every entry: what changed, and **what to review in a vault that has already adopted PAROS.**
 
+## 0.19.0 (2026-10-28)
+
+The learning loop measured what went in, not what it changed. After a code-level comparison with AutoHarness (an open self-improving skill layer), the cognitive cycle now measures the effect of learning from the transcripts, finds lessons nobody wrote down, and moves every rule to where its cause lives.
+
+- **Measurement** (`kits/cognition/miner.py`, new; read only, no LLM, counters only, no content): the main metric is **friction**, recurring errors per 100 tool calls, this week against last. The learning funnel follows a rule from intake through exposure, application and transfer to prevention. A rule can carry a **signal pattern** (`on`, `trigger`, `comply`, `avoid`, `violation`); measured compliance becomes a `helpful` event by itself, so the weight also grows from effect. The report gets a LEARNING RATE block.
+- **Detection:** errors that recur across sessions with no rule covering them become lesson candidates; the caretaker writes packets for the strongest, and the normal review route decides. A recurring error that a rule does cover is an adherence failure and goes to the curator.
+- **Curator, every cycle:** the rule moves to its cause. A tool or environment fact becomes general at once; a principle gets its wording at once and its weight by evidence; domain judgement stays until it repeats. Lossless operations `merge` (with a `superseded_by` pointer), `promote`, `link`, `rehome`, `scope`; new text only with the independent judge's yes, at most three per cycle, a 7-day cooldown, a batch of six per cycle, `packet --full` for a full review.
+- **General rules file** (`PAROS/GENERAL_RULES.md`, generated): rules with a global or per-machine scope, one compact line each, loaded in every session through the vault's entry file; rules already in memory are not repeated. `show` and `find` give the detail on demand.
+- **Just in time:** a `PreToolUse` hook (`pretool-hook`) stops a command that breaks a rule marked `enforce`; enforcement is the owner's decision only.
+- **Reflection:** every cycle ends with a few sentences on whether the system learns at the right pace and in the right way; a lesson about learning itself becomes a packet.
+- **Several machines:** rule IDs from a per-machine range (`PAROS_ID_BLOCKS`), a registry that heals itself from the event logs, an optimistic lock (`apply` exits with code 3 if another machine ran a cycle meanwhile), and `backfill`.
+- **`kits/learn-merge` brought up to date:** existing line endings (CRLF or mixed) are kept byte for byte; the generated COGNITION block is protected like the Constitution; `deprecate` lands above a generated block; a moved rule's pointer keeps its bold title. `judge.py` keeps the prompt within a size budget (`PAROS_JUDGE_BUDGET`, the touched rule and section first) and retries an HTTP 413 once with a smaller prompt.
+- Updated: P05 (detection from transcripts, measuring the effect, the rule moves to its cause, the curator every cycle), the cognition README (with "What we learned from AutoHarness") and `CYCLE.md`, the Maestro agent (1.1.0: cycle steps, a rule's home in learn-review).
+- To review: replace `cognition.py` and add `miner.py` next to it; set `PAROS_ID_BLOCKS` if you use more than one machine and run `cognition.py backfill` once on each; import the general rules file from your vault's entry file; add the `PreToolUse` hook only when you decide to enforce a rule; run `cognition.py measure` once to see your friction baseline; update the cycle steps of your caretaker agent from `CYCLE.md`; replace `learn_merge.py` and `judge.py`.
+
 ## 0.18.0 (2026-10-28)
 
 People who use PAROS often credit it with what their agent app does (or the other way round), and many work for weeks without the parts that make a vault a PAROS. This release makes the advisor teach that difference and lead to the missing pieces, as much as the person is curious about.
